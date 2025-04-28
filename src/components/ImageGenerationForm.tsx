@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { saveImageToStorage } from "@/lib/storage";
 
 interface FormData {
   prompt: string;
@@ -80,6 +81,17 @@ export function ImageGenerationForm() {
       setStatus("Processing response...");
       const result = await response.json();
       setGeneratedImages(result.images);
+
+      // Save each generated image to local storage
+      result.images.forEach((image: { url: string }) => {
+        saveImageToStorage({
+          id: Date.now().toString(),
+          url: image.url,
+          prompt: data.prompt,
+          createdAt: new Date().toISOString(),
+        });
+      });
+
       setStatus("Images generated successfully!");
       toast.success("Images generated successfully!");
     } catch (error) {

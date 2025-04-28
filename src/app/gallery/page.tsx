@@ -2,24 +2,27 @@
 
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
-// This would typically come from your database or API
-const mockImages = [
-  {
-    id: 1,
-    url: "https://placeholder.co/512x512",
-    prompt: "A beautiful sunset over a mountain landscape",
-    createdAt: "2024-03-20",
-  },
-  {
-    id: 2,
-    url: "https://placeholder.co/512x512",
-    prompt: "A futuristic city with flying cars",
-    createdAt: "2024-03-20",
-  },
-];
+interface GeneratedImage {
+  id: string;
+  url: string;
+  prompt: string;
+  createdAt: string;
+}
 
 export default function GalleryPage() {
+  const [images, setImages] = useState<GeneratedImage[]>([]);
+
+  useEffect(() => {
+    // Load images from localStorage on component mount
+    const savedImages = localStorage.getItem("generatedImages");
+    if (savedImages) {
+      setImages(JSON.parse(savedImages));
+    }
+  }, []);
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
@@ -32,12 +35,15 @@ export default function GalleryPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {mockImages.map((image) => (
+          {images.map((image) => (
             <Card key={image.id} className="overflow-hidden">
-              <img
+              <Image
                 src={image.url}
                 alt={image.prompt}
+                width={512}
+                height={512}
                 className="aspect-square w-full object-cover"
+                unoptimized
               />
               <div className="p-4">
                 <p className="text-sm text-muted-foreground">{image.prompt}</p>
