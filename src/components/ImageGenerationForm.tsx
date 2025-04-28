@@ -31,6 +31,7 @@ const MODELS = [
   { id: "dall-e-3", name: "DALL-E 3 (OpenAI)", maxImages: 1 },
   { id: "dall-e-2", name: "DALL-E 2 (OpenAI)", maxImages: 4 },
   { id: "stable-diffusion", name: "Stable Diffusion", maxImages: 4 },
+  { id: "gemini", name: "Gemini (Google)", maxImages: 1 },
 ];
 
 export function ImageGenerationForm() {

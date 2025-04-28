@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,6 +8,8 @@ const openai = new OpenAI({
 
 const STABILITY_API_KEY = process.env.STABILITY_API_KEY;
 const STABILITY_API_HOST = "https://api.stability.ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 
 interface StabilityArtifact {
   base64: string;
@@ -96,6 +99,38 @@ export async function POST(req: Request) {
       }));
 
       return NextResponse.json({ images });
+    }
+
+    if (model === "gemini") {
+      if (!process.env.GOOGLE_API_KEY) {
+        return NextResponse.json(
+          { error: "Google API key not configured" },
+          { status: 500 }
+        );
+      }
+
+      const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: "", // Empty data as we're generating images
+          },
+        },
+      ]);
+
+      const response = await result.response;
+      if (!response.candidates?.[0]?.content?.parts?.[0]?.text) {
+        throw new Error("Failed to generate image with Gemini");
+      }
+      const imageData = response.candidates[0].content.parts[0].text;
+
+      // Convert the generated image data to a URL
+      const imageUrl = `data:image/jpeg;base64,${imageData}`;
+
+      return NextResponse.json({ images: [{ url: imageUrl }] });
     }
 
     return NextResponse.json(
