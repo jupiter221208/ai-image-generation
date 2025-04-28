@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       model: "dall-e-3",
       prompt: fullPrompt,
       n: numImages,
-      size: "1024x1024",
+      size: "1792x1024",
       quality: "standard",
       style: "natural",
     });
