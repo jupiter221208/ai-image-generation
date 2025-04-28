@@ -8,16 +8,30 @@ import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 interface FormData {
   prompt: string;
   negativePrompt?: string;
   numImages: number;
+  model: string;
 }
 
 interface GeneratedImage {
   url: string;
 }
+
+const MODELS = [
+  { id: "dall-e-3", name: "DALL-E 3 (OpenAI)", maxImages: 1 },
+  { id: "dall-e-2", name: "DALL-E 2 (OpenAI)", maxImages: 4 },
+  { id: "stable-diffusion", name: "Stable Diffusion", maxImages: 4 },
+];
 
 export function ImageGenerationForm() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -29,18 +43,21 @@ export function ImageGenerationForm() {
       prompt: "",
       negativePrompt: "",
       numImages: 1,
+      model: "dall-e-3",
     },
   });
+
+  const selectedModel = MODELS.find((m) => m.id === form.watch("model"));
 
   const onSubmit = async (data: FormData) => {
     try {
       setIsGenerating(true);
       setStatus("Initializing image generation...");
       toast.info(
-        `Generating ${data.numImages} image(s) with prompt: ${data.prompt}`
+        `Generating ${data.numImages} image(s) with ${selectedModel?.name} using prompt: ${data.prompt}`
       );
 
-      setStatus("Sending request to DALL-E...");
+      setStatus("Sending request to AI model...");
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
@@ -60,7 +77,7 @@ export function ImageGenerationForm() {
       toast.success("Images generated successfully!");
     } catch (error) {
       setStatus("Error generating images");
-      toast.error("Failed to generate images");
+      toast.error("Failed to generate images:");
       console.error(error);
     } finally {
       setIsGenerating(false);
@@ -70,6 +87,28 @@ export function ImageGenerationForm() {
   return (
     <Card className="p-6">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">AI Model</label>
+          <Select
+            onValueChange={(value) => {
+              form.setValue("model", value);
+              form.setValue("numImages", 1);
+            }}
+            defaultValue={form.getValues("model")}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a model" />
+            </SelectTrigger>
+            <SelectContent>
+              {MODELS.map((model) => (
+                <SelectItem key={model.id} value={model.id}>
+                  {model.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="space-y-2">
           <label className="text-sm font-medium">Prompt</label>
           <Textarea
@@ -97,11 +136,15 @@ export function ImageGenerationForm() {
             {...form.register("numImages", {
               required: true,
               min: 1,
-              max: 4,
+              max: selectedModel?.maxImages || 1,
             })}
             min={1}
-            max={4}
+            max={selectedModel?.maxImages || 1}
           />
+          <p className="text-xs text-muted-foreground">
+            Maximum {selectedModel?.maxImages} image(s) for{" "}
+            {selectedModel?.name}
+          </p>
         </div>
 
         <Button type="submit" className="w-full" disabled={isGenerating}>
