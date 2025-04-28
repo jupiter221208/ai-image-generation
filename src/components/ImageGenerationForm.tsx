@@ -21,6 +21,9 @@ interface FormData {
   negativePrompt?: string;
   numImages: number;
   model: string;
+  openaiApiKey?: string;
+  stabilityApiKey?: string;
+  googleApiKey?: string;
 }
 
 interface GeneratedImage {
@@ -45,6 +48,9 @@ export function ImageGenerationForm() {
       negativePrompt: "",
       numImages: 1,
       model: "dall-e-3",
+      openaiApiKey: "",
+      stabilityApiKey: "",
+      googleApiKey: "",
     },
   });
 
@@ -109,6 +115,39 @@ export function ImageGenerationForm() {
             </SelectContent>
           </Select>
         </div>
+
+        {selectedModel?.id.startsWith("dall-e") && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">OpenAI API Key</label>
+            <Input
+              type="password"
+              {...form.register("openaiApiKey", { required: true })}
+              placeholder="Enter your OpenAI API key"
+            />
+          </div>
+        )}
+
+        {selectedModel?.id === "stable-diffusion" && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Stability AI API Key</label>
+            <Input
+              type="password"
+              {...form.register("stabilityApiKey", { required: true })}
+              placeholder="Enter your Stability AI API key"
+            />
+          </div>
+        )}
+
+        {selectedModel?.id === "gemini" && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Google API Key</label>
+            <Input
+              type="password"
+              {...form.register("googleApiKey", { required: true })}
+              placeholder="Enter your Google API key"
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Prompt</label>

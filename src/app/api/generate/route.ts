@@ -2,15 +2,6 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const STABILITY_API_KEY = process.env.STABILITY_API_KEY;
-const STABILITY_API_HOST = "https://api.stability.ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
-
 interface StabilityArtifact {
   base64: string;
   seed: number;
@@ -23,9 +14,28 @@ interface StabilityResponse {
 
 export async function POST(req: Request) {
   try {
-    const { prompt, negativePrompt, numImages, model } = await req.json();
+    const {
+      prompt,
+      negativePrompt,
+      numImages,
+      model,
+      openaiApiKey,
+      stabilityApiKey,
+      googleApiKey,
+    } = await req.json();
 
     if (model.startsWith("dall-e")) {
+      if (!openaiApiKey) {
+        return NextResponse.json(
+          { error: "OpenAI API key is required" },
+          { status: 400 }
+        );
+      }
+
+      const openai = new OpenAI({
+        apiKey: openaiApiKey,
+      });
+
       const fullPrompt = negativePrompt
         ? `${prompt}. Avoid: ${negativePrompt}`
         : prompt;
@@ -43,23 +53,21 @@ export async function POST(req: Request) {
     }
 
     if (model === "stable-diffusion") {
-      console.log("Generating images with Stable Diffusion");
-      if (!STABILITY_API_KEY) {
-        console.error("Stability API key not configured");
+      if (!stabilityApiKey) {
         return NextResponse.json(
-          { error: "Stability API key not configured" },
-          { status: 500 }
+          { error: "Stability API key is required" },
+          { status: 400 }
         );
       }
 
       const response = await fetch(
-        `${STABILITY_API_HOST}/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image`,
+        "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${STABILITY_API_KEY}`,
+            Authorization: `Bearer ${stabilityApiKey}`,
           },
           body: JSON.stringify({
             text_prompts: [
@@ -102,13 +110,14 @@ export async function POST(req: Request) {
     }
 
     if (model === "gemini") {
-      if (!process.env.GOOGLE_API_KEY) {
+      if (!googleApiKey) {
         return NextResponse.json(
-          { error: "Google API key not configured" },
-          { status: 500 }
+          { error: "Google API key is required" },
+          { status: 400 }
         );
       }
 
+      const genAI = new GoogleGenerativeAI(googleApiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
 
       const result = await model.generateContent([
