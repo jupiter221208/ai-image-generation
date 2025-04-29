@@ -16,6 +16,9 @@ import {
   SelectValue,
 } from "./ui/select";
 import { saveImageToStorage } from "@/lib/storage";
+import { useDispatch, useSelector } from "react-redux";
+import { setFormData } from "@/lib/formSlice";
+import type { RootState } from "@/lib/store";
 
 interface FormData {
   prompt: string;
@@ -42,16 +45,18 @@ export function ImageGenerationForm() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [status, setStatus] = useState<string>("");
+  const dispatch = useDispatch();
+  const formState = useSelector((state: RootState) => state.form) as FormData;
 
   const form = useForm<FormData>({
     defaultValues: {
-      prompt: "",
-      negativePrompt: "",
-      numImages: 1,
-      model: "dall-e-3",
-      openaiApiKey: "",
-      stabilityApiKey: "",
-      googleApiKey: "",
+      prompt: formState.prompt,
+      negativePrompt: formState.negativePrompt,
+      numImages: formState.numImages,
+      model: formState.model,
+      openaiApiKey: formState.openaiApiKey,
+      stabilityApiKey: formState.stabilityApiKey,
+      googleApiKey: formState.googleApiKey,
     },
   });
 
@@ -59,6 +64,7 @@ export function ImageGenerationForm() {
 
   const onSubmit = async (data: FormData) => {
     try {
+      dispatch(setFormData(data));
       setIsGenerating(true);
       setStatus("Initializing image generation...");
       toast.info(
