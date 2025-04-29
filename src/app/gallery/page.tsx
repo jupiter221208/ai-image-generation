@@ -4,6 +4,9 @@ import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface GeneratedImage {
   id: string;
@@ -23,15 +26,37 @@ export default function GalleryPage() {
     }
   }, []);
 
+  const handleClearGallery = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete all images? This cannot be undone."
+      )
+    ) {
+      localStorage.removeItem("generatedImages");
+      setImages([]);
+      toast.success("Gallery cleared successfully");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
-      <div className="container px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">Gallery</h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Browse through your generated images
-          </p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">Gallery</h1>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Browse through your generated images
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            onClick={handleClearGallery}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            Clear Gallery
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
